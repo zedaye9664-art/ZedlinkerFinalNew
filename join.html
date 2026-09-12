@@ -1,58 +1,70 @@
-<!-- ZedLinker - SEO Friendly Join Page -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loading...</title>
+<style>body{font-family:sans-serif; padding:20px; max-width:600px; margin:auto}</style>
+</head>
+<body>
 <div id="loading">Loading Group...</div>
-<div id="content" style="display:none; padding:20px;">
-  <h1 id="groupTitle">Group Name</h1>
+<div id="content" style="display:none">
+  <h1 id="groupTitle"></h1>
   <p><b>Category:</b> <span id="groupCategory"></span></p>
   <p><b>Members:</b> <span id="groupMembers"></span></p>
-  <p id="groupDesc">Description yahan ayegi...</p>
-  
-  <button id="joinBtn" style="background:green; color:white; padding:15px 30px; font-size:18px;">
-    Join Now on WhatsApp
-  </button>
-  
-  <p style="margin-top:20px; font-size:12px; color:gray;">
-    You will be redirected in 5 seconds...
-  </p>
-
-  <h3>Related Groups:</h3>
+  <p id="groupDesc"></p>
+  <button id="joinBtn" style="background:#25D366;color:white;padding:15px 30px;font-size:18px;border:none;border-radius:8px;cursor:pointer">Join Now on WhatsApp</button>
+  <p style="margin-top:20px;color:gray;font-size:12px">ZedLinker - Best WhatsApp Groups Directory</p>
   <div id="related"></div>
 </div>
 
 <script type="module">
-import { doc, getDoc } from "firebase/firestore";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const urlParams = new URLSearchParams(window.location.search);
-const groupId = urlParams.get('id'); // jaise ?id=pakistan-jobs-123
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGgWhJrtuO4sYocovHSbu4LsLY4mtgNs",
+  authDomain: "zedlinker-4545.firebaseapp.com",
+  projectId: "zedlinker-4545",
+  storageBucket: "zedlinker-4545.firebasestorage.app",
+  messagingSenderId: "673513119995",
+  appId: "1:673513119995:web:f4e2beb6e7e18d3222105e"
+};
 
-async function loadGroup() {
-  const docRef = doc(db, "groups", groupId);
-  const docSnap = await getDoc(docRef);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    
-    // SEO ke liye content bharo
-    document.getElementById('groupTitle').innerText = data.name;
-    document.getElementById('groupCategory').innerText = data.category;
-    document.getElementById('groupDesc').innerText = data.description;
-    document.getElementById('groupMembers').innerText = data.members || "250+";
-    document.title = data.name + " - Join on ZedLinker";
+const params = new URLSearchParams(window.location.search);
+let groupId = params.get('id');
+if(!groupId){
+  // agar link /join/xyz jaisa hai
+  const path = window.location.pathname.split('/').filter(Boolean).pop();
+  if(path && path !== 'join.html' && path !== 'join') groupId = path;
+}
 
-    // Page dikhao
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-
-    // Button pe link lagao
-    document.getElementById('joinBtn').onclick = () => {
-      window.open(data.whatsappLink, '_blank');
-    };
-
-    // Auto redirect 5 sec baad (Google ke liye content pehle dikh gaya!)
-    setTimeout(() => {
-      // window.open(data.whatsappLink, '_blank'); // auto mat karo, user ko click karne do
-    }, 5000);
-
+async function loadGroup(){
+ if(!groupId) { document.getElementById('loading').innerText="Invalid Link! ID missing"; return; }
+ try {
+  const snap = await getDoc(doc(db, "groups", groupId));
+  if(!snap.exists()) { 
+    document.getElementById('loading').innerText="Group Not Found: "+groupId; 
+    return; 
   }
+  const data = snap.data();
+  document.getElementById('groupTitle').innerText = data.name || data.title || groupId;
+  document.getElementById('groupCategory').innerText = data.category || "General";
+  document.getElementById('groupDesc').innerText = data.description || data.desc || "Join this amazing WhatsApp group on ZedLinker";
+  document.getElementById('groupMembers').innerText = data.members || "250+";
+  document.title = (data.name || data.title || "Group") + " - Join on ZedLinker";
+  document.getElementById('loading').style.display='none';
+  document.getElementById('content').style.display='block';
+  document.getElementById('joinBtn').onclick = () => window.open(data.whatsappLink || data.link || data.url, '_blank');
+ } catch(e){ 
+   document.getElementById('loading').innerText="Error: "+e.message; 
+   console.log(e);
+ }
 }
 loadGroup();
-  </script>
+</script>
+</body>
+</html>
