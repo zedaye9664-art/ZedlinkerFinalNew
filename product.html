@@ -1,77 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product - Zedlinker</title>
-  <meta name="description" content="Best deals on Zedlinker.store">
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; padding: 16px; max-width: 600px; margin: 0 auto; background: #fff; }
-    img { width: 100%; border-radius: 20px; border: 1px solid #eee; }
-    .btn { background: linear-gradient(to right, #ec4899, #3b82f6); color: white; padding: 16px 30px; border-radius: 30px; display: block; text-decoration: none; font-weight: bold; margin-top: 20px; text-align: center; font-size: 18px; }
-    .badge { background: #f3f4f6; padding: 6px 16px; border-radius: 20px; font-size: 14px; }
-    .price { background: #111827; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; }
-    #share-box { background: #f9fafb; border: 1px dashed #ccc; padding: 12px; border-radius: 12px; margin-top: 20px; font-size: 12px; word-break: break-all; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zedlinker Product</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <a href="/" style="text-decoration:none; color:#111;">← Back to Home</a>
-  <div id="product-container" style="margin-top:20px;">Loading product...</div>
+<body class="bg-gray-100">
+<div id="app" class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow mt-6">Loading product...</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCsGgWhJrtuO4sYocovHSbu4LsLY4mtgNs",
-    authDomain: "zedlinker-4545.firebaseapp.com",
-    projectId: "zedlinker-4545",
-    storageBucket: "zedlinker-4545.firebasestorage.app",
-    messagingSenderId: "673513119995",
-    appId: "1:673513119995:web:f4e2beb6e7e18d3222105e"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGgWhJrtuO4sYocovHSbu4LsLY4mtgNs",
+  authDomain: "zedlinker-4545.firebaseapp.com",
+  projectId: "zedlinker-4545",
+  storageBucket: "zedlinker-4545.firebasestorage.app",
+  messagingSenderId: "673513119995",
+  appId: "1:673513119995:web:f4e2beb6e7e18d3222105e"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  async function loadProduct() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
-    
-    if(!productId) {
-      document.getElementById('product-container').innerHTML = "<h2>Product ID missing!</h2><p>Go back to <a href='/'>home page</a></p>";
+const params = new URLSearchParams(window.location.search);
+let productId = params.get('id');
+if(productId) productId = productId.trim();
+
+const appDiv = document.getElementById('app');
+
+async function load(){
+  if(!productId){ 
+    appDiv.innerHTML = "<h2 class='text-red-600 font-bold'>ID missing!</h2><p>Use link like: ?id=PRODUCT_ID</p>"; 
+    return; 
+  }
+  try{
+    const snap = await getDoc(doc(db, "products", productId));
+    if(!snap.exists()){
+      appDiv.innerHTML = `<h2 class='text-red-600 font-bold text-xl'>Product Not Found!</h2><p class='mt-2'>ID: <span class='font-mono bg-gray-100 p-1'>${productId}</span></p><p class='mt-2 text-sm'>Ye ID Firebase mein nahi mila. Firebase se Copy ID pe click karo.</p>`;
       return;
     }
-
-    try {
-      const docRef = doc(db, "products", productId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const p = docSnap.data();
-        document.getElementById('product-container').innerHTML = `
-          <img src="${p.imageUrl}" alt="${p.title}" />
-          <p style="margin-top:16px;"><span class="badge">${p.category || 'Electronics'}</span> <span class="price">Rs ${p.price}</span></p>
-          <h1 style="font-size:28px; line-height:1.2; margin-top:10px;">${p.title}</h1>
-          <p style="color:#555;">${p.shortDescription || ''}</p>
-          <div style="background:#f9fafb; padding:15px; border-radius:15px; margin-top:15px; color:#333; white-space: pre-line;">
-            ${p.fullDescription || p.shortDescription || ''}
-          </div>
-          <a class="btn" href="${p.affiliateLink}" target="_blank">Visit Product - Buy on Daraz</a>
-          <div id="share-box">
-            <b>Your Final Shareable Link (Copy This):</b><br>
-            https://zedlinker.store/product.html?id=${productId}
-          </div>
-        `;
-        document.title = p.title + " - Zedlinker.store";
-      } else {
-        document.getElementById('product-container').innerHTML = "<h2>Product not found!</h2><p>ID: "+productId+" Firebase mein nahi mila</p>";
-      }
-    } catch (e) {
-      document.getElementById('product-container').innerHTML = "Error: " + e.message;
-    }
+    const p = snap.data();
+    appDiv.innerHTML = `
+      <a href="/" class="text-sm text-blue-600">← Back to Home</a>
+      <img src="${p.imageUrl}" class="w-full h-80 object-cover rounded-lg mt-4">
+      <h1 class="text-3xl font-bold mt-4">${p.title}</h1>
+      <p class="text-green-600 font-bold text-2xl mt-2">Rs. ${p.price}</p>
+      <p class="text-gray-600 mt-4 leading-relaxed">${p.description || p.shortDescription || ''}</p>
+      <a href="${p.affiliateLink}" target="_blank" class="block bg-orange-500 hover:bg-orange-600 text-white text-center py-4 rounded-xl mt-8 font-bold text-lg">🔥 Buy on Daraz - Best Deal</a>
+      <div class="mt-6 text-xs text-gray-400 border-t pt-3">Category: ${p.category||'General'}<br>ID: ${productId}</div>
+    `;
+  }catch(e){
+    appDiv.innerHTML = "<b>Firebase Error:</b> "+e.message;
   }
-  loadProduct();
+}
+load();
 </script>
 </body>
-  </html>
+</html>
