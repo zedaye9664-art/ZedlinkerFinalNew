@@ -1,26 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loading...</title>
-<style>body{font-family:sans-serif; padding:20px; max-width:600px; margin:auto}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join WhatsApp Group - ZedLinker</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<div id="loading">Loading Group...</div>
-<div id="content" style="display:none">
-  <h1 id="groupTitle"></h1>
-  <p><b>Category:</b> <span id="groupCategory"></span></p>
-  <p><b>Members:</b> <span id="groupMembers"></span></p>
-  <p id="groupDesc"></p>
-  <button id="joinBtn" style="background:#25D366;color:white;padding:15px 30px;font-size:18px;border:none;border-radius:8px;cursor:pointer">Join Now on WhatsApp</button>
-  <p style="margin-top:20px;color:gray;font-size:12px">ZedLinker - Best WhatsApp Groups Directory</p>
-  <div id="related"></div>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+<div id="app" class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+  <p id="status" class="text-gray-500">Loading Group...</p>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCsGgWhJrtuO4sYocovHSbu4LsLY4mtgNs",
@@ -35,36 +28,34 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const params = new URLSearchParams(window.location.search);
-let groupId = params.get('id');
-if(!groupId){
-  // agar link /join/xyz jaisa hai
-  const path = window.location.pathname.split('/').filter(Boolean).pop();
-  if(path && path !== 'join.html' && path !== 'join') groupId = path;
-}
+const groupId = params.get("id");
+const appDiv = document.getElementById("app");
 
-async function loadGroup(){
- if(!groupId) { document.getElementById('loading').innerText="Invalid Link! ID missing"; return; }
- try {
-  con   const snap = await getDoc(doc(db, "links", groupId));
-  if(!snap.exists()) { 
-    document.getElementById('loading').innerText="Group Not Found: "+groupId; 
-    return; 
+if(!groupId){
+  appDiv.innerHTML = `<h1 class="text-xl font-bold text-red-500">No Group ID Found</h1>`;
+} else {
+  try {
+    const snap = await getDoc(doc(db, "links", groupId));
+    if(!snap.exists()){
+      appDiv.innerHTML = `<h1 class="text-xl font-bold text-red-500">Group Not Found: ${groupId}</h1>`;
+    } else {
+      const data = snap.data();
+      document.title = data.name + " - ZedLinker";
+      appDiv.innerHTML = `
+        <h1 class="text-2xl font-bold mb-2">${data.name || 'WhatsApp Group'}</h1>
+        <p class="text-sm bg-green-100 text-green-700 inline-block px-3 py-1 rounded-full mb-4">${data.category || 'General'}</p>
+        <p class="text-gray-600 mb-6 text-left">${data.description || 'Join this amazing WhatsApp group now!'}</p>
+        <a id="joinBtn" href="${data.link}" target="_blank" class="block w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition">
+          Join Now on WhatsApp
+        </a>
+        <p class="text-xs text-gray-400 mt-4">You will be redirected to WhatsApp</p>
+      `;
+    }
+  } catch (e) {
+    console.error(e);
+    appDiv.innerHTML = `<h1 class="text-red-500">Error: ${e.message}</h1><p class="text-xs mt-2">Rules me allow read: if true; karke Publish karo</p>`;
   }
-  const data = snap.data();
-  document.getElementById('groupTitle').innerText = data.name || data.title || groupId;
-  document.getElementById('groupCategory').innerText = data.category || "General";
-  document.getElementById('groupDesc').innerText = data.description || data.desc || "Join this amazing WhatsApp group on ZedLinker";
-  document.getElementById('groupMembers').innerText = data.members || "250+";
-  document.title = (data.name || data.title || "Group") + " - Join on ZedLinker";
-  document.getElementById('loading').style.display='none';
-  document.getElementById('content').style.display='block';
-  document.getElementById('joinBtn').onclick = () => window.open(data.whatsappLink || data.link || data.url, '_blank');
- } catch(e){ 
-   document.getElementById('loading').innerText="Error: "+e.message; 
-   console.log(e);
- }
 }
-loadGroup();
 </script>
 </body>
 </html>
