@@ -1,0 +1,58 @@
+<!-- ZedLinker - SEO Friendly Join Page -->
+<div id="loading">Loading Group...</div>
+<div id="content" style="display:none; padding:20px;">
+  <h1 id="groupTitle">Group Name</h1>
+  <p><b>Category:</b> <span id="groupCategory"></span></p>
+  <p><b>Members:</b> <span id="groupMembers"></span></p>
+  <p id="groupDesc">Description yahan ayegi...</p>
+  
+  <button id="joinBtn" style="background:green; color:white; padding:15px 30px; font-size:18px;">
+    Join Now on WhatsApp
+  </button>
+  
+  <p style="margin-top:20px; font-size:12px; color:gray;">
+    You will be redirected in 5 seconds...
+  </p>
+
+  <h3>Related Groups:</h3>
+  <div id="related"></div>
+</div>
+
+<script type="module">
+import { doc, getDoc } from "firebase/firestore";
+
+const urlParams = new URLSearchParams(window.location.search);
+const groupId = urlParams.get('id'); // jaise ?id=pakistan-jobs-123
+
+async function loadGroup() {
+  const docRef = doc(db, "groups", groupId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    
+    // SEO ke liye content bharo
+    document.getElementById('groupTitle').innerText = data.name;
+    document.getElementById('groupCategory').innerText = data.category;
+    document.getElementById('groupDesc').innerText = data.description;
+    document.getElementById('groupMembers').innerText = data.members || "250+";
+    document.title = data.name + " - Join on ZedLinker";
+
+    // Page dikhao
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+
+    // Button pe link lagao
+    document.getElementById('joinBtn').onclick = () => {
+      window.open(data.whatsappLink, '_blank');
+    };
+
+    // Auto redirect 5 sec baad (Google ke liye content pehle dikh gaya!)
+    setTimeout(() => {
+      // window.open(data.whatsappLink, '_blank'); // auto mat karo, user ko click karne do
+    }, 5000);
+
+  }
+}
+loadGroup();
+  </script>
