@@ -45,7 +45,7 @@ if(!groupId){
 async function loadGroup(){
  if(!groupId) { document.getElementById('loading').innerText="Invalid Link! ID missing"; return; }
  try {
-  const snap = await getDoc(doc(db, "groups", groupId));
+  con   const snap = await getDoc(doc(db, "links", groupId));
   if(!snap.exists()) { 
     document.getElementById('loading').innerText="Group Not Found: "+groupId; 
     return; 
